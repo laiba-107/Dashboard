@@ -163,16 +163,23 @@ def heap_sort(arr):
 # ---------- Visualization ----------
 def visualize_sorting(steps):
     placeholder = st.empty()
-    fig, ax = plt.subplots(figsize=(6, 3))  # smaller size
+    fig, ax = plt.subplots(figsize=(5, 2.5))  # even smaller
 
     for step in steps:
         ax.clear()
-        ax.bar(range(len(step)), step, color='mediumslateblue', width=0.5)
+        bars = ax.bar(range(len(step)), step, color='mediumslateblue', width=0.4)
         ax.set_xticks([])
         ax.set_yticks([])
-        ax.set_title("Sorting Progress", fontsize=10)
+        ax.set_title("Sorting Progress", fontsize=9)
+
+        # Add value labels on top of bars
+        for rect, val in zip(bars, step):
+            height = rect.get_height()
+            ax.text(rect.get_x() + rect.get_width() / 2.0, height, str(val), ha='center', va='bottom', fontsize=7)
+
         placeholder.pyplot(fig)
         time.sleep(0.2)
+
 
 
 # ---------- UI ----------

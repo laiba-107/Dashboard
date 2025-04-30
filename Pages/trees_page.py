@@ -74,18 +74,17 @@ class AVL:
         root.height = 1 + max(self.get_height(root.left), self.get_height(root.right))
         balance = self.get_balance(root)
 
-        # Rotations
         if balance > 1:
-            if key < root.left.key:  # LL
+            if key < root.left.key:
                 return self.rotate_right(root)
-            else:  # LR
+            else:
                 root.left = self.rotate_left(root.left)
                 return self.rotate_right(root)
 
         if balance < -1:
-            if key > root.right.key:  # RR
+            if key > root.right.key:
                 return self.rotate_left(root)
-            else:  # RL
+            else:
                 root.right = self.rotate_right(root.right)
                 return self.rotate_left(root)
 
@@ -164,9 +163,8 @@ class RBTree:
 
     def insert(self, key):
         node = RBNode(key)
+        node.left = node.right = self.TNULL
         node.parent = None
-        node.left = self.TNULL
-        node.right = self.TNULL
 
         y = None
         x = self.root
@@ -181,6 +179,8 @@ class RBTree:
         node.parent = y
         if not y:
             self.root = node
+            self.root.left = self.TNULL
+            self.root.right = self.TNULL
         elif node.key < y.key:
             y.left = node
         else:
@@ -201,7 +201,7 @@ class RBTree:
                 else:
                     if k == k.parent.left:
                         k = k.parent
-                        k = self.rotate_right(k)
+                        self.rotate_right(k)
                     k.parent.color = 'B'
                     k.parent.parent.color = 'R'
                     self.rotate_left(k.parent.parent)
@@ -215,7 +215,7 @@ class RBTree:
                 else:
                     if k == k.parent.right:
                         k = k.parent
-                        k = self.rotate_left(k)
+                        self.rotate_left(k)
                     k.parent.color = 'B'
                     k.parent.parent.color = 'R'
                     self.rotate_right(k.parent.parent)
@@ -257,26 +257,34 @@ class RBTree:
 
 # ---------- Tree Visualization ---------- #
 def render_tree(root, tree_type="BST"):
-    def traverse(node, dot, label_func):
-        if not node:
+    def traverse(node, dot, label_func, color_func):
+        if not node or (tree_type == "RB" and node.key == 0):
             return
         label = label_func(node)
-        dot.node(str(id(node)), label)
-        if node.left:
+        color = color_func(node)
+        dot.node(str(id(node)), label, style="filled", fillcolor=color, fontcolor="white" if color == "black" else "black")
+
+        if node.left and (tree_type != "RB" or node.left.key != 0):
             dot.edge(str(id(node)), str(id(node.left)), label="L")
-            traverse(node.left, dot, label_func)
-        if node.right:
+            traverse(node.left, dot, label_func, color_func)
+        if node.right and (tree_type != "RB" or node.right.key != 0):
             dot.edge(str(id(node)), str(id(node.right)), label="R")
-            traverse(node.right, dot, label_func)
+            traverse(node.right, dot, label_func, color_func)
 
     dot = graphviz.Digraph()
-    label_func = lambda n: str(n.key) if tree_type == "BST" else f"{n.key} ({getattr(n, 'color', 'B')})"
-    traverse(root, dot, label_func)
+    label_func = lambda n: str(n.key)
+    color_func = (lambda n: "red" if getattr(n, 'color', 'B') == 'R' else "black") if tree_type == "RB" else (lambda n: "lightblue")
+    traverse(root, dot, label_func, color_func)
     return dot
 
-# ---------- UI ---------- #
+# ---------- UI Setup ---------- #
 tree_option = st.sidebar.radio("Choose Tree Type", ["Binary Search Tree", "AVL Tree", "Red-Black Tree"])
-action = st.sidebar.radio("Action", ["Insert", "Delete"])
+
+if tree_option == "Red-Black Tree":
+    action = st.sidebar.radio("Action", ["Insert"], index=0)
+else:
+    action = st.sidebar.radio("Action", ["Insert", "Delete"])
+
 value = st.sidebar.number_input("Value", step=1, format="%d")
 
 if 'bst_tree' not in st.session_state: st.session_state.bst_tree = BST()
@@ -301,11 +309,14 @@ if st.sidebar.button("Submit"):
             st.session_state.avl_root = st.session_state.avl_tree.delete(st.session_state.avl_root, value)
 
     elif tree_option == "Red-Black Tree":
-        if action == "Insert":
-            st.session_state.rb_tree.insert(value)
-        else:
-            st.warning("Red-Black Tree deletion not implemented")
+        st.session_state.rb_tree.insert(value)
 
+if st.sidebar.button("Reset Tree"):
+    st.session_state.bst_root = None
+    st.session_state.avl_root = None
+    st.session_state.rb_tree = RBTree()
+
+# ---------- Visualization ---------- #
 st.subheader(f"Visualization - {tree_option}")
 if tree_option == "Binary Search Tree" and st.session_state.bst_root:
     st.graphviz_chart(render_tree(st.session_state.bst_root))
@@ -313,4 +324,3 @@ elif tree_option == "AVL Tree" and st.session_state.avl_root:
     st.graphviz_chart(render_tree(st.session_state.avl_root))
 elif tree_option == "Red-Black Tree" and st.session_state.rb_tree.root != st.session_state.rb_tree.TNULL:
     st.graphviz_chart(render_tree(st.session_state.rb_tree.root, "RB"))
-

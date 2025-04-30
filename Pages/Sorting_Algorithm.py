@@ -162,12 +162,18 @@ def heap_sort(arr):
 
 # ---------- Visualization ----------
 def visualize_sorting(steps):
-    fig, ax = plt.subplots()
+    placeholder = st.empty()
+    fig, ax = plt.subplots(figsize=(6, 3))  # smaller size
+
     for step in steps:
         ax.clear()
-        ax.bar(range(len(step)), step, color='skyblue')
-        st.pyplot(fig)
-        time.sleep(0.3)
+        ax.bar(range(len(step)), step, color='mediumslateblue', width=0.5)
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.set_title("Sorting Progress", fontsize=10)
+        placeholder.pyplot(fig)
+        time.sleep(0.2)
+
 
 # ---------- UI ----------
 st.sidebar.header("Sort Input")
@@ -190,6 +196,7 @@ else:
 
 if st.button("Run Sorting"):
     start = time.time()
+
     if algorithm == "Bubble Sort":
         sorted_arr, steps = bubble_sort(arr)
         complexity = "Best: O(n), Avg/Worst: O(n²)"
@@ -216,7 +223,14 @@ if st.button("Run Sorting"):
         st.stop()
 
     end = time.time()
-    visualize_sorting(steps)
-    st.write(f"Time Complexity: {complexity}")
-    st.write(f"Execution Time: {end - start:.5f} sec")
+
+    # Display Results
+    st.markdown("---")
+    st.markdown("### ✅ Sorted Output")
     st.success(f"Sorted Array: {sorted_arr}")
+    st.write(f"**Time Complexity**: {complexity}")
+    st.write(f"**Execution Time**: `{end - start:.5f} sec`")
+
+    # Move visualization to bottom
+    st.markdown("### 📊 Sorting Visualization")
+    visualize_sorting(steps)

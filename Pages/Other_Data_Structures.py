@@ -70,7 +70,7 @@ def show():
     
     ds_type = st.sidebar.selectbox(
         "Select Data Structure:",
-        ["Stack", "Queue", "Hash Table", "Graph"]
+        ["Stack", "Queue", "Hash Table"]
     )
     
     if ds_type == "Stack":
@@ -157,32 +157,7 @@ def show():
         with col2:
             st.subheader("Visualization")
             visualize_hash_table()
-    
-    elif ds_type == "Graph":
-        st.header("Graph Operations")
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            st.subheader("Operations")
-            node1 = st.text_input("Node 1:")
-            node2 = st.text_input("Node 2:")
-            
-            if st.button("Add Node"):
-                if node1:
-                    st.session_state.graph.add_node(node1)
-            
-            if st.button("Add Edge"):
-                if node1 and node2:
-                    st.session_state.graph.add_edge(node1, node2)
-            
-            if st.button("Clear Graph"):
-                st.session_state.graph = nx.Graph()
-            
-            st.write("**Common Algorithms:**")
-            st.write("- DFS: O(V + E)")
-            st.write("- BFS: O(V + E)")
-            st.write("- Dijkstra: O(E + V log V)")
-        
+
         with col2:
             st.subheader("Visualization")
             visualize_graph()

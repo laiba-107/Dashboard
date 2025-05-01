@@ -6,7 +6,8 @@
 
 ✨ **An interactive visualization tool** for learning algorithms and data structures through step-by-step animations and visual demonstrations.
 
-![Dashboard Screenshot](https://i.imgur.com/JQ8K3hG.png)
+![image](https://github.com/user-attachments/assets/f47f0664-09f1-4209-9aab-4726fb3d6917)
+
 
 ## 🌟 Features
 
@@ -34,9 +35,5 @@
 ### Prerequisites
 - Python 3.8+
 - pip package manager
-
-### Installation
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/yourusername/algorithm-visualizer.git
-   cd algorithm-visualizer
+- Streamlit
+- Graphviz

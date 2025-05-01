@@ -1,7 +1,6 @@
 import streamlit as st
 import graphviz
 from collections import deque
-import time
 
 st.set_page_config(page_title="Tree Structures", layout="wide")
 st.title("🌲 Tree Structures (BST, AVL, Red-Black)")
@@ -60,6 +59,14 @@ class BST:
         while node.left:
             node = node.left
         return node
+
+    def search(self, root, key):
+        if not root or root.key == key:
+            return root
+        if key < root.key:
+            return self.search(root.left, key)
+        else:
+            return self.search(root.right, key)
 
 # ---------- AVL ---------- #
 class AVL:
@@ -154,11 +161,20 @@ class AVL:
     def get_balance(self, node):
         return self.get_height(node.left) - self.get_height(node.right) if node else 0
 
-# ---------- Red-Black Tree (Insertion Only) ---------- #
+# ---------- Red-Black Tree ---------- #
+class RBNode:
+    def __init__(self, key):
+        self.key = key
+        self.color = 'R'
+        self.left = None
+        self.right = None
+        self.parent = None
+
 class RBTree:
     def __init__(self):
         self.TNULL = RBNode(0)
         self.TNULL.color = 'B'
+        self.TNULL.left = self.TNULL.right = None
         self.root = self.TNULL
 
     def insert(self, key):
@@ -179,14 +195,18 @@ class RBTree:
         node.parent = y
         if not y:
             self.root = node
-            self.root.left = self.TNULL
-            self.root.right = self.TNULL
         elif node.key < y.key:
             y.left = node
         else:
             y.right = node
 
-        node.color = 'R'
+        if not node.parent:
+            node.color = 'B'
+            return
+
+        if not node.parent.parent:
+            return
+
         self.fix_insert(node)
 
     def fix_insert(self, k):
@@ -223,6 +243,114 @@ class RBTree:
                 break
         self.root.color = 'B'
 
+    def delete_node(self, key):
+        self.delete_node_helper(self.root, key)
+
+    def delete_node_helper(self, node, key):
+        z = self.TNULL
+        while node != self.TNULL:
+            if node.key == key:
+                z = node
+                break
+            elif key < node.key:
+                node = node.left
+            else:
+                node = node.right
+
+        if z == self.TNULL:
+            return  # Node to delete not found
+
+        y = z
+        y_original_color = y.color
+        if z.left == self.TNULL:
+            x = z.right
+            self.rb_transplant(z, z.right)
+        elif z.right == self.TNULL:
+            x = z.left
+            self.rb_transplant(z, z.left)
+        else:
+            y = self.minimum(z.right)
+            y_original_color = y.color
+            x = y.right
+            if y.parent == z:
+                x.parent = y
+            else:
+                self.rb_transplant(y, y.right)
+                y.right = z.right
+                y.right.parent = y
+
+            self.rb_transplant(z, y)
+            y.left = z.left
+            y.left.parent = y
+            y.color = z.color
+
+        if y_original_color == 'B':
+            self.fix_delete(x)
+
+    def rb_transplant(self, u, v):
+        if not u.parent:
+            self.root = v
+        elif u == u.parent.left:
+            u.parent.left = v
+        else:
+            u.parent.right = v
+        v.parent = u.parent
+
+    def fix_delete(self, x):
+        while x != self.root and x.color == 'B':
+            if x == x.parent.left:
+                s = x.parent.right
+                if s.color == 'R':
+                    s.color = 'B'
+                    x.parent.color = 'R'
+                    self.rotate_left(x.parent)
+                    s = x.parent.right
+
+                if s.left.color == 'B' and s.right.color == 'B':
+                    s.color = 'R'
+                    x = x.parent
+                else:
+                    if s.right.color == 'B':
+                        s.left.color = 'B'
+                        s.color = 'R'
+                        self.rotate_right(s)
+                        s = x.parent.right
+
+                    s.color = x.parent.color
+                    x.parent.color = 'B'
+                    s.right.color = 'B'
+                    self.rotate_left(x.parent)
+                    x = self.root
+            else:
+                s = x.parent.left
+                if s.color == 'R':
+                    s.color = 'B'
+                    x.parent.color = 'R'
+                    self.rotate_right(x.parent)
+                    s = x.parent.left
+
+                if s.left.color == 'B' and s.right.color == 'B':
+                    s.color = 'R'
+                    x = x.parent
+                else:
+                    if s.left.color == 'B':
+                        s.right.color = 'B'
+                        s.color = 'R'
+                        self.rotate_left(s)
+                        s = x.parent.left
+
+                    s.color = x.parent.color
+                    x.parent.color = 'B'
+                    s.left.color = 'B'
+                    self.rotate_right(x.parent)
+                    x = self.root
+        x.color = 'B'
+
+    def minimum(self, node):
+        while node.left != self.TNULL:
+            node = node.left
+        return node
+
     def rotate_left(self, x):
         y = x.right
         x.right = y.left
@@ -237,7 +365,6 @@ class RBTree:
             x.parent.right = y
         y.left = x
         x.parent = y
-        return y
 
     def rotate_right(self, x):
         y = x.left
@@ -253,7 +380,17 @@ class RBTree:
             x.parent.left = y
         y.right = x
         x.parent = y
-        return y
+
+    def search(self, key):
+        return self.search_helper(self.root, key)
+
+    def search_helper(self, node, key):
+        if node == self.TNULL or key == node.key:
+            return node
+        if key < node.key:
+            return self.search_helper(node.left, key)
+        return self.search_helper(node.right, key)
+
 
 # ---------- Tree Visualization ---------- #
 def render_tree(root, tree_type="BST"):
@@ -280,10 +417,7 @@ def render_tree(root, tree_type="BST"):
 # ---------- UI Setup ---------- #
 tree_option = st.sidebar.radio("Choose Tree Type", ["Binary Search Tree", "AVL Tree", "Red-Black Tree"])
 
-if tree_option == "Red-Black Tree":
-    action = st.sidebar.radio("Action", ["Insert"], index=0)
-else:
-    action = st.sidebar.radio("Action", ["Insert", "Delete"])
+action = st.sidebar.radio("Action", ["Insert", "Delete", "Search"])
 
 value = st.sidebar.number_input("Value", step=1, format="%d")
 
@@ -299,17 +433,38 @@ if st.sidebar.button("Submit"):
     if tree_option == "Binary Search Tree":
         if action == "Insert":
             st.session_state.bst_root = st.session_state.bst_tree.insert(st.session_state.bst_root, value)
-        else:
+        elif action == "Delete":
             st.session_state.bst_root = st.session_state.bst_tree.delete(st.session_state.bst_root, value)
+        elif action == "Search":
+            result = st.session_state.bst_tree.search(st.session_state.bst_root, value)
+            if result:
+                st.success(f"🔍 Value {value} found in the BST!")
+            else:
+                st.error(f"❌ Value {value} not found in the BST.")
 
     elif tree_option == "AVL Tree":
         if action == "Insert":
             st.session_state.avl_root = st.session_state.avl_tree.insert(st.session_state.avl_root, value)
-        else:
+        elif action == "Delete":
             st.session_state.avl_root = st.session_state.avl_tree.delete(st.session_state.avl_root, value)
+        elif action == "Search":
+            result = st.session_state.avl_tree.search(st.session_state.avl_root, value)
+            if result:
+                st.success(f"🔍 Value {value} found in the AVL Tree!")
+            else:
+                st.error(f"❌ Value {value} not found in the AVL Tree.")
 
     elif tree_option == "Red-Black Tree":
-        st.session_state.rb_tree.insert(value)
+        if action == "Insert":
+            st.session_state.rb_tree.insert(value)
+        elif action == "Delete":
+            st.session_state.rb_tree.delete_node(value)
+        elif action == "Search":
+            result = st.session_state.rb_tree.search(value)
+            if result != st.session_state.rb_tree.TNULL:
+                st.success(f"🔍 Value {value} found in the Red-Black Tree!")
+            else:
+                st.error(f"❌ Value {value} not found in the Red-Black Tree.")
 
 if st.sidebar.button("Reset Tree"):
     st.session_state.bst_root = None
